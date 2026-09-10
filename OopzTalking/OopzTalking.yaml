@@ -1,7 +1,7 @@
 name: Oopz Talking
 author: luckyumimi
 tags: [UI]
-punchline: 在小队列表上直接显示 oopz 语音房间里谁在说话。
+punchline: FF14 小队列表直接显示 oopz 语音房里谁在说话、谁静音了。
 IconUrl: https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/plugins/OopzTalking/icon.png
 description: >-
     连接 oopz 本机 WebSocket (127.0.0.1:10274)，把语音房间里的说话/静音状态画到 FF14

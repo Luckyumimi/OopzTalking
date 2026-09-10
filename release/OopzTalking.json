@@ -13,7 +13,7 @@
   "LoadSync": false,
   "CanUnloadAsync": false,
   "LoadPriority": 0,
-  "Punchline": "在小队列表上直接显示 oopz 语音房间里谁在说话。",
+  "Punchline": "FF14 小队列表直接显示 oopz 语音房里谁在说话、谁静音了。",
   "AcceptsFeedback": true,
   "IconUrl": "https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/plugins/OopzTalking/icon.png"
 }
