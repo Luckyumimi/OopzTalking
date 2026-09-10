@@ -1,6 +1,7 @@
 # Oopz Talking — FF14 小队列表显示 oopz 谁在说话
 
 **改编自 [WhosTalking](https://codeberg.org/keysmashes/WhosTalking)（by keysmashes），把数据源从 Discord 换成 oopz**，游戏内绘制层（绿/蓝/黄框、未匹配名单、跨服/团队列表支持）原样保留。
+
 **警告，本插件除原作者贡献代码外，100%代码为LLM生成**
 
 ![预览](OopzTalking/images/screenshot.png)
