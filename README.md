@@ -25,20 +25,7 @@
 
 - `/oopztalking` —— 开关设置窗口
 - `/oopztalking port 10274` —— 改 oopz 端口（默认已 10274）
-- oopz 昵称包含角色名（第一个或最后一个字）即自动匹配；重名/花名可在设置「Advanced Individual Assignments」手动绑定
-
-## 文件结构
-
-```
-OopzTalking.sln / OopzTalking\OopzTalking.csproj   工程
-OopzTalking\OopzConnection.cs                       数据源：直连 oopz 本地 ws（替代原 DiscordConnection）
-OopzTalking\Plugin.cs                               绘制/匹配逻辑（XivToOopz，原 XivToDiscord 改名）
-OopzTalking\Configuration.cs                        配置（mute/speak/deafen 颜色、端口、绑定）
-OopzTalking\Windows\ConfigWindow.cs                 设置窗口
-OopzTalking\Windows\MainWindow.cs                   Debug 窗口
-OopzTalking\OopzTalking.yaml / .json                插件清单（API 15）
-release\                                            编译产物（DLL + 清单 + 图标）
-```
+- oopz 昵称包含角色名（第一个或最后一个字）即自动匹配；重名/花名可在设置「高级手动绑定」手动绑定
 
 ## 怎么编译
 
@@ -49,22 +36,6 @@ $env:DalamudLibPath = "$env:APPDATA\XIVLauncherCN\addon\Hooks\dev"
 dotnet build OopzTalking.sln -c Release -p:DalamudLibPath="$env:DalamudLibPath"
 # 产物：OopzTalking\bin\x64\Release\OopzTalking.dll + .json
 ```
-
-## 与原版 WhosTalking 的差异
-
-| 项 | WhosTalking | OopzTalking |
-|---|---|---|
-| 数据源 | Discord RPC WebSocket（6463，需 OAuth token + 订阅事件） | oopz 本地 ws（10274，免认证，2 秒推全量） |
-| 匹配 | Discord 昵称 / 手动绑定 ID | oopz 昵称包含角色名 / 手动绑定成员名 |
-| 命令 | `/whostalking` | `/oopztalking` |
-| 依赖 | Websocket.Client | 无（System.Net.WebSockets） |
-| 自己身份 | Discord `Self` | oopz 流无标记，按角色名匹配 |
-
-## 注意
-
-- oopz 成员流是**全量快照**（每 1~2 秒整体替换），不像 Discord 有单独 speaking 事件，所以说话框最多延迟 1~2 秒。
-- oopz 自己没有"服务器/频道"概念，`Connection.Self` 恒为 null，自己的指示按角色名匹配。
-- 小队列表被 HUD 布局隐藏时（DelvUI 等替换列表的插件场景）需在设置里关掉指示灯，与原版行为一致。
 
 ## 开源协议 / License
 
