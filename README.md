@@ -15,7 +15,7 @@
 
 在游戏里 **卫月设置 → 自定义插件库（Testing 库）**：
 
-1. 添加自定义库链接：`https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaster.json`
+1. 添加自定义库链接：```https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaster.json```
 2. 在 **已安装插件** 里搜索 **Oopz Talking**，点击安装
 3. 启用后：进 oopz 语音房间 + FF14 小队，队友昵称与角色名一致即可立刻看到说话框。
 
@@ -27,7 +27,7 @@
 - `/oopztalking port 10274` —— 改 oopz 端口（默认已 10274）
 - oopz 昵称包含角色名（第一个或最后一个字）即自动匹配；重名/花名可在设置「高级手动绑定」手动绑定
 
-## 怎么编译
+## 编译
 
 需要 .NET SDK 和卫月 dev 目录（`%APPDATA%\XIVLauncher\addon\Hooks\dev` 或 `XIVLauncherCN` 的对应目录，内含 `Dalamud.dll`）：
 
