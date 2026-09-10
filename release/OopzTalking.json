@@ -14,5 +14,6 @@
   "CanUnloadAsync": false,
   "LoadPriority": 0,
   "Punchline": "在小队列表上直接显示 oopz 语音房间里谁在说话。",
-  "AcceptsFeedback": true
+  "AcceptsFeedback": true,
+  "IconUrl": "https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/plugins/OopzTalking/icon.png"
 }
