@@ -15,9 +15,14 @@
 
 在游戏里 **卫月设置 → 自定义插件库（Testing 库）**：
 
-1. 添加自定义库链接：```https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaster.json```
-2. 在 **已安装插件** 里搜索 **Oopz Talking**，点击安装
-3. 启用后：进 oopz 语音房间 + FF14 小队，队友昵称与角色名一致即可立刻看到说话框。
+1. 添加自定义库链接：
+
+```
+https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaster.json
+```
+
+3. 在 **已安装插件** 里搜索 **Oopz Talking**，点击安装
+4. 启用后：进 oopz 语音房间 + FF14 小队，队友昵称与角色名一致即可立刻看到说话框。
 
 > 也可以走研发模式手动加载本仓库 `release\` 下的 DLL（需同时存在同目录 `OopzTalking.json` 清单，且卫月开启"研发选项 → 开发插件路径"）。
 
