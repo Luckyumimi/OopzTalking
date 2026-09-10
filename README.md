@@ -2,6 +2,8 @@
 
 **改编自 [WhosTalking](https://codeberg.org/keysmashes/WhosTalking)（by keysmashes），把数据源从 Discord 换成 oopz**，游戏内绘制层（绿/蓝/黄框、未匹配名单、跨服/团队列表支持）原样保留。
 
+![预览](OopzTalking/images/screenshot.png)
+
 数据不经过任何服务器：直连本机 oopz 客户端在 `127.0.0.1:10274` 暴露的 WebSocket，读 `{"cmd":"members","voice":true,"members":[{"name":"...","talking":true,"muted":false}]}` 成员流，每 1~2 秒刷新一次。只需 oopz 昵称包含游戏角色名（或手动绑定），就能在小队列表看到：
 
 - 🟢 绿框 = 正在说话
@@ -9,15 +11,15 @@
 - 🟡 黄框 = 名字没对上（可在设置里关掉）
 - 也可在列表下方显示"不在小队里但正在说话的人"
 
-## 安装（卫月 dev 插件方式）
+## 安装（库链）
 
-在游戏里 **卫月设置 → 研发/开发选项**：
+在游戏里 **卫月设置 → 自定义插件库（Testing 库）**：
 
-1. 勾选 **启用开发模式**（Development Mode）
-2. 添加**开发插件路径**，选择本文件夹下的 **`OopzTalking.dll`**（目录里必须同时存在 `OopzTalking.json` 清单）
-3. 在 **已安装插件** 里启用 **Oopz Talking**（InternalName: `OopzTalking`，API 15，匹配国服卫月 15.0.3.x / 国际服 15.0.3.x）
+1. 添加自定义库链接：`https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaster.json`
+2. 在 **已安装插件** 里搜索 **Oopz Talking**，点击安装
+3. 启用后：进 oopz 语音房间 + FF14 小队，队友昵称与角色名一致即可立刻看到说话框。
 
-启用后：进 oopz 语音房间 + FF14 小队，队友昵称与角色名一致即可立刻看到说话框。
+> 也可以走研发模式手动加载本仓库 `release\` 下的 DLL（需同时存在同目录 `OopzTalking.json` 清单，且卫月开启"研发选项 → 开发插件路径"）。
 
 ## 使用
 
