@@ -8,7 +8,6 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.UI.Info;
 
 namespace OopzTalking.Windows;
 
@@ -16,9 +15,6 @@ public sealed class ConfigWindow: Window, IDisposable {
     private readonly List<AssignmentEntry> individualAssignments;
     private readonly Plugin plugin;
     private readonly ISharedImmediateTexture previewImage;
-    private int idInCallIdx;
-
-    private int playerInPartyIdx;
 
     private string? overlayResetMsg;
 
@@ -426,93 +422,19 @@ public sealed class ConfigWindow: Window, IDisposable {
                     this.SaveAssignmentsNow();
                 }
 
-                // New Entry dropdowns
-
-                // Prep: grab extant player names and oopz names
-                var extantPlayerNames = new List<string>();
-                foreach (var item in this.plugin.Configuration.IndividualAssignments) {
-                    extantPlayerNames.Add(item.CharacterName);
-                }
-
-                // XIV player name
-                List<string> playersInParty;
-                unsafe {
-                    // Get party list and players in it
-                    var partyInfoProxy = InfoProxyPartyMember.Instance();
-                    var partyMemberCount = partyInfoProxy->InfoProxyCommonList.DataSize;
-                    playersInParty = new List<string>();
-
-                    if (partyInfoProxy != null) {
-                        for (uint i = 0; i < partyMemberCount; i++) {
-                            var entry = partyInfoProxy->InfoProxyCommonList.GetEntry(i);
-                            if (entry == null) {
-                                continue;
-                            }
-
-                            var name = entry->NameString;
-                            // Don't add people we already know
-                            if (name == null || extantPlayerNames.Contains(name)) {
-                                continue;
-                            }
-
-                            playersInParty.Add(name);
-                        }
-                    }
-
-                    var _playersInParty = playersInParty.ToArray();
-                    ImGui.TableNextColumn();
-                    ImGui.SetNextItemWidth(150);
-                    ImGui.Combo(
-                        "###PlayersInParty",
-                        ref this.playerInPartyIdx,
-                        _playersInParty,
-                        _playersInParty.Length
-                    );
-                }
-
-                // oopz name
-                var oopzUsers = this.plugin.Connection.AllUsers;
-                var namesInCall = new List<string>(); // actual names
-                foreach (var user in oopzUsers.Values) {
-                    // Don't add people who aren't real
-                    if (user.Username == null) {
-                        continue;
-                    }
-
-                    var displayName = user.DisplayName.IsNullOrEmpty() ? user.Username : user.DisplayName;
-                    if (!namesInCall.Contains(displayName)) {
-                        namesInCall.Add(displayName);
-                    }
-                }
-
-                var _namesInCall = namesInCall.ToArray();
-                ImGui.TableNextColumn();
-                ImGui.SetNextItemWidth(200);
-                ImGui.Combo(
-                    "###NamesInCall",
-                    ref this.idInCallIdx,
-                    _namesInCall,
-                    _namesInCall.Length
-                );
-
-                // Add entry to list
-                ImGui.TableNextColumn();
-                if (ImGui.Button("添加")) {
-                    var _charaName = this.playerInPartyIdx < playersInParty.Count
-                        ? playersInParty[this.playerInPartyIdx]
-                        : "";
-                    var _oopzName = this.playerInPartyIdx < namesInCall.Count ? namesInCall[this.idInCallIdx] : "";
-
-                    var i = this.individualAssignments.Count;
-                    this.individualAssignments.Add(new AssignmentEntry());
-
-                    this.individualAssignments[i].CharacterName = _charaName;
-                    this.individualAssignments[i].OopzName = _oopzName;
-                    this.SaveAssignmentsNow();
-                }
-
                 ImGui.EndTable();
             }
+
+            // 添加：新增一行空白绑定，两个下拉都选好后自动保存
+            if (ImGui.Button("添加")) {
+                this.individualAssignments.Add(new AssignmentEntry());
+            }
+
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("新增一行空白绑定，选好两个下拉后立即生效并自动保存。");
+            }
+
+            ImGui.SameLine();
 
             if (ImGui.Button("重置")) {
                 this.ResetListToConfig();
