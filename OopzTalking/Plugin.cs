@@ -180,6 +180,63 @@ public sealed class Plugin: IDalamudPlugin {
         this.Connection = new OopzConnection(this);
     }
 
+    // 读取当前小队全部成员名（含跨服/跨世界小队），供设置界面「高级手动绑定」下拉使用。
+    // 数据来源与游戏内的队伍列表一致：跨服小队走 InfoProxyCrossRealm，
+    // 同服/进本走 InfoProxyCommonList，最后用 Dalamud 小队列表兜底。
+    public unsafe List<string> GetPartyMemberNames() {
+        var names = new List<string>();
+
+        void Add(string? name) {
+            if (string.IsNullOrEmpty(name)) {
+                return;
+            }
+
+            // 空位占位符（游戏用括号占位，如 "(   )"）
+            if (name.StartsWith('(')) {
+                return;
+            }
+
+            if (!names.Contains(name)) {
+                names.Add(name);
+            }
+        }
+
+        // 1) 跨服小队 / 24 人本：自己所在的那一组
+        var ipcr = InfoProxyCrossRealm.Instance();
+        if (ipcr != null && (InfoProxyCrossRealm.IsCrossRealmParty() || ipcr->IsInAllianceRaid)) {
+            var memberCount = ipcr->IsInAllianceRaid
+                ? InfoProxyCrossRealm.GetGroupMemberCount(ipcr->LocalPlayerGroupIndex)
+                : InfoProxyCrossRealm.GetPartyMemberCount();
+            for (var i = 0; i < memberCount; i++) {
+                var member = InfoProxyCrossRealm.GetGroupMember((uint)i);
+                if (member != null) {
+                    Add(member->NameString);
+                }
+            }
+        }
+
+        // 2) 常规小队（同服 / 进本）：游戏队伍列表数据源
+        var partyInfoProxy = InfoProxyPartyMember.Instance();
+        if (partyInfoProxy != null) {
+            var partyMemberCount = partyInfoProxy->InfoProxyCommonList.DataSize;
+            for (var i = 0; i < partyMemberCount; i++) {
+                var entry = partyInfoProxy->InfoProxyCommonList.GetEntry((uint)i);
+                if (entry != null) {
+                    Add(entry->NameString);
+                }
+            }
+        }
+
+        // 3) 兜底：Dalamud 小队列表 + 自己
+        foreach (var member in this.PartyList) {
+            Add(member.Name.TextValue);
+        }
+
+        Add(this.PlayerState.CharacterName);
+
+        return names;
+    }
+
     private uint GetColour(User? user) {
         if (user == null) {
             return this.Configuration.ShowUnmatchedUsers ? this.Configuration.ColourUnmatched : 0;

@@ -338,11 +338,8 @@ public sealed class ConfigWindow: Window, IDisposable {
                 ImGui.TableNextRow();
 
                 // 收集候选：
-                // 1) 小队成员名字（含跨服）作为角色名候选
-                var partyNames = new List<string>();
-                foreach (var member in this.plugin.PartyList) {
-                    partyNames.Add(member.Name.TextValue);
-                }
+                // 1) 角色名：跨服小队 + 同服小队 + 自己（与游戏队伍列表同款数据源）
+                var partyNames = this.plugin.GetPartyMemberNames();
 
                 // 2) oopz 房间成员名（显示名优先）作为 oopz 候选
                 var oopzMemberNames = new List<string>();

@@ -2,7 +2,7 @@
   "Author": "luckyumimi",
   "Name": "Oopz Talking",
   "InternalName": "OopzTalking",
-  "AssemblyVersion": "0.2.2.0",
+  "AssemblyVersion": "0.2.3.0",
   "Description": "连接 oopz 本机 WebSocket (127.0.0.1:10274)，把语音房间里的说话/静音状态画到 FF14 小队列表上：绿框=正在说话，蓝框=静音，黄框=名字没对上。\n\n只需 oopz 昵称与游戏角色名一致（或包含角色名的第一/最后一个字），即可自动匹配； 也可以在设置里手动绑定角色名到 oopz 成员名。\n\n数据源与本机 oopz 客户端直连，不出机器。",
   "ApplicableVersion": "any",
   "Tags": [
