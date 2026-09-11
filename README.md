@@ -30,8 +30,8 @@ https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaste
 
 ## 使用
 
-- `/oopztalking` —— 开关设置窗口
-- `/oopztalking port 10274` —— 改 oopz 端口（默认已 10274）
+- `/oopz` —— 开关设置窗口
+- `/oopz port 10274` —— 改 oopz 端口（默认已 10274）
 - oopz 昵称包含角色名（第一个或最后一个字）即自动匹配；重名/花名可在设置「高级手动绑定」手动绑定
 
 ## 编译

@@ -86,13 +86,13 @@ public sealed class Plugin: IDalamudPlugin {
         this.disposeActions.Push(() => this.IpcSystem.Dispose());
 
         this.CommandManager.AddHandler(
-            "/oopztalking",
+            "/oopz",
             new CommandInfo(this.OnCommand) {
-                HelpMessage = "打开设置\n" + "/oopztalking port <数字> -- 设置端口",
+                HelpMessage = "打开设置\n" + "/oopz port <数字> -- 设置端口",
             }
         );
 
-        this.disposeActions.Push(() => this.CommandManager.RemoveHandler("/oopztalking"));
+        this.disposeActions.Push(() => this.CommandManager.RemoveHandler("/oopz"));
 
         this.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "_PartyList", this.AtkDrawPartyList);
         this.disposeActions.Push(() => this.AddonLifecycle.UnregisterListener(this.AtkDrawPartyList));
@@ -158,11 +158,11 @@ public sealed class Plugin: IDalamudPlugin {
                         this.ChatGui.PrintError("端口不是有效数字。", "Oopz Talking");
                     }
                 } else {
-                    this.ChatGui.PrintError("用法：/oopztalking port <数字>", "Oopz Talking");
+                    this.ChatGui.PrintError("用法：/oopz port <数字>", "Oopz Talking");
                 }
             } else {
                 this.ChatGui.PrintError(
-                    "可用命令：\n- /oopztalking\n- /oopztalking port <数字>",
+                    "可用命令：\n- /oopz\n- /oopz port <数字>",
                     "Oopz Talking"
                 );
             }
