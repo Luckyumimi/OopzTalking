@@ -18,6 +18,13 @@ public sealed class ConfigWindow: Window, IDisposable {
 
     private string? overlayResetMsg;
 
+    // 小队成员名单缓存 + 刷新逻辑：
+    // 进入「高级手动绑定」页面时立即读一次，之后每 PartyRefreshInterval 自动刷新，
+    // 也可点「手动刷新」按钮立即重读（数据源见 Plugin.GetPartyMemberNames）。
+    private List<string> partyNames = new();
+    private DateTime lastPartyRefresh = DateTime.MinValue;
+    private static readonly TimeSpan PartyRefreshInterval = TimeSpan.FromSeconds(5);
+
     public ConfigWindow(Plugin plugin): base("Oopz Talking 设置") {
         this.plugin = plugin;
         this.individualAssignments = new List<AssignmentEntry>();
@@ -330,6 +337,26 @@ public sealed class ConfigWindow: Window, IDisposable {
                 + Environment.NewLine
                 + "下拉选择后立即生效并自动保存。"
             );
+            // 小队列表刷新：打开本页立即读一次，之后每 5 秒自动刷新；
+            // 也可以点「手动刷新」立即重读（读取的是游戏内存里的实时数据）。
+            if (this.lastPartyRefresh == DateTime.MinValue
+                || DateTime.Now - this.lastPartyRefresh >= PartyRefreshInterval) {
+                this.RefreshPartyNames();
+            }
+
+            ImGui.Text($"小队成员名单：{this.partyNames.Count} 人");
+            ImGui.SameLine();
+            if (ImGui.Button("手动刷新")) {
+                this.RefreshPartyNames();
+            }
+
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("立即重新读取游戏内的队伍成员名单（跨服小队/24 人本/同服小队/自己）。");
+            }
+
+            ImGui.SameLine();
+            ImGui.TextDisabled($"已读取 {this.lastPartyRefresh:HH:mm:ss}，每 5 秒自动刷新");
+
             if (ImGui.BeginTable("AssignmentTable", 3)) {
                 ImGui.TableSetupColumn("角色名");
                 ImGui.TableSetupColumn("oopz 成员名");
@@ -338,8 +365,8 @@ public sealed class ConfigWindow: Window, IDisposable {
                 ImGui.TableNextRow();
 
                 // 收集候选：
-                // 1) 角色名：跨服小队 + 同服小队 + 自己（与游戏队伍列表同款数据源）
-                var partyNames = this.plugin.GetPartyMemberNames();
+                // 1) 角色名：跨服小队 + 同服小队 + 自己（与游戏队伍列表同款数据源，
+                //    结果缓存在 this.partyNames，见上面的自动/手动刷新）
 
                 // 2) oopz 房间成员名（显示名优先）作为 oopz 候选
                 var oopzMemberNames = new List<string>();
@@ -364,7 +391,7 @@ public sealed class ConfigWindow: Window, IDisposable {
                         }
                     }
 
-                    foreach (var name in partyNames) {
+                    foreach (var name in this.partyNames) {
                         if (!charaOptions.Contains(name)) {
                             charaOptions.Add(name);
                         }
@@ -445,6 +472,13 @@ public sealed class ConfigWindow: Window, IDisposable {
 
             ImGui.TreePop();
         }
+    }
+
+    // 重新读取游戏内的队伍成员名单，并记录刷新时刻。
+    // 数据来源见 Plugin.GetPartyMemberNames（跨服小队/24 人本 → 同服小队 → Dalamud 兜底 → 自己）。
+    private void RefreshPartyNames() {
+        this.partyNames = this.plugin.GetPartyMemberNames();
+        this.lastPartyRefresh = DateTime.Now;
     }
 
     // 即时保存：把当前内部列表整份写回配置。
