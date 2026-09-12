@@ -325,10 +325,12 @@ public sealed class ConfigWindow: Window, IDisposable {
             ImGui.BulletText(
                 "将游戏角色名手动绑定到 oopz 成员名。"
                 + Environment.NewLine
+                + "同一个 oopz 成员可以绑定多个游戏角色（例如小号、共用语音号的亲友）。"
+                + Environment.NewLine
                 + "oopz 成员名就是语音房间里显示的名字，一般不用手动绑定——"
                 + "只要 oopz 昵称包含角色名（名或姓一部分）就会自动匹配。"
                 + Environment.NewLine
-                + "下拉选择后立即生效并自动保存。"
+                + "角色名可直接输入任意名字，或点 ▾ 从当前小队成员中选择；修改后立即生效并自动保存。"
             );
             if (ImGui.BeginTable("AssignmentTable", 3)) {
                 ImGui.TableSetupColumn("角色名");
@@ -370,17 +372,37 @@ public sealed class ConfigWindow: Window, IDisposable {
                         }
                     }
 
-                    ImGui.SetNextItemWidth(150);
-                    if (ImGui.BeginCombo($"###nameEntry{i}", entry.CharacterName)) {
-                        for (var ci = 0; ci < charaOptions.Count; ci++) {
-                            if (ImGui.Selectable(charaOptions[ci], charaOptions[ci] == entry.CharacterName)) {
-                                entry.CharacterName = charaOptions[ci];
+                    // 角色名：可自由输入任意名字（如不在当前小队里的小号），
+                    // 也可点 ▾ 从「已绑定角色名 + 当前小队成员」候选里选择。
+                    // 同一个 oopz 成员可以在多行重复绑定，实现一成员多角色。
+                    var charInput = entry.CharacterName;
+                    ImGui.SetNextItemWidth(130);
+                    if (ImGui.InputText($"###nameEntry{i}Input", ref charInput, 128)) {
+                        entry.CharacterName = charInput;
+                        this.individualAssignments[i] = entry;
+                    }
+
+                    // 回车/失焦时保存输入框内容
+                    if (ImGui.IsItemDeactivatedAfterEdit()) {
+                        this.SaveAssignmentsNow();
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button("▾###nameEntry" + i + "Pick")) {
+                        ImGui.OpenPopup("###nameEntry" + i + "Popup");
+                    }
+
+                    if (ImGui.BeginPopup("###nameEntry" + i + "Popup")) {
+                        foreach (var name in charaOptions) {
+                            if (ImGui.Selectable(name, name == entry.CharacterName)) {
+                                entry.CharacterName = name;
                                 this.individualAssignments[i] = entry;
                                 this.SaveAssignmentsNow();
+                                ImGui.CloseCurrentPopup();
                             }
                         }
 
-                        ImGui.EndCombo();
+                        ImGui.EndPopup();
                     }
 
                     // oopz 成员名下拉：候选 = 当前 oopz 房间成员
@@ -422,13 +444,13 @@ public sealed class ConfigWindow: Window, IDisposable {
                 ImGui.EndTable();
             }
 
-            // 添加：新增一行空白绑定，两个下拉都选好后自动保存
+            // 添加：新增一行空白绑定，填好后自动保存
             if (ImGui.Button("添加")) {
                 this.individualAssignments.Add(new AssignmentEntry());
             }
 
             if (ImGui.IsItemHovered()) {
-                ImGui.SetTooltip("新增一行空白绑定，选好两个下拉后立即生效并自动保存。");
+                ImGui.SetTooltip("新增一行空白绑定，填好角色名和 oopz 成员名后立即生效并自动保存。");
             }
 
             ImGui.SameLine();
