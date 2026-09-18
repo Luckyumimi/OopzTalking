@@ -8,6 +8,7 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui.ContextMenu;
+using Dalamud.Game.Text;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
@@ -259,6 +260,10 @@ public sealed class Plugin: IDalamudPlugin {
         return names;
     }
 
+    // 菜单图标：游戏内的方框字母 O（U+E07F = SeIconChar.BoxedLetterO）。
+    // 之前「已绑定」标记用的 ✓(U+2713) 游戏字体里没有，会渲染成方框。
+    private const SeIconChar MenuIcon = SeIconChar.BoxedLetterO;
+
     // 右键菜单里出现「oopz成员绑定」的界面：只要右键目标是某个玩家角色名，
     // 绑定就有意义，所以把 HUD 小队/团队列表、O 键社交面板各页、副本队员列表都算上。
     // 社交面板（O 键）里的小队页在游戏里叫 PartyMemberList，本体是 SocialList。
@@ -287,6 +292,7 @@ public sealed class Plugin: IDalamudPlugin {
         args.AddMenuItem(
             new MenuItem {
                 Name = "oopz成员绑定",
+                Prefix = MenuIcon,
                 IsSubmenu = true,
                 UseDefaultPrefix = false,
                 OnClicked = clickedArgs => clickedArgs.OpenSubmenu(
@@ -319,13 +325,18 @@ public sealed class Plugin: IDalamudPlugin {
                 entry => entry.CharacterName == characterName && entry.OopzName == member
             );
 
-            items.Add(
-                new MenuItem {
-                    Name = bound ? $"✓ {member}（已绑定，点击取消）" : member,
-                    UseDefaultPrefix = false,
-                    OnClicked = _ => this.ToggleOopzBinding(characterName, member),
-                }
-            );
+            var item = new MenuItem {
+                Name = bound ? $"{member}（已绑定，点击取消）" : member,
+                UseDefaultPrefix = false,
+                OnClicked = _ => this.ToggleOopzBinding(characterName, member),
+            };
+
+            if (bound) {
+                // 已绑定的项前面加同一个方框 O 图标
+                item.Prefix = MenuIcon;
+            }
+
+            items.Add(item);
         }
 
         return items;
