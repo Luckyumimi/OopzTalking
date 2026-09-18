@@ -259,12 +259,19 @@ public sealed class Plugin: IDalamudPlugin {
         return names;
     }
 
-    // 小队列表右键菜单：加一个「oopz成员绑定」子菜单。
+    // 右键菜单里出现「oopz成员绑定」的界面：只要右键目标是某个玩家角色名，
+    // 绑定就有意义，所以把 HUD 小队/团队列表、O 键社交面板各页、副本队员列表都算上。
+    // 社交面板（O 键）里的小队页在游戏里叫 PartyMemberList，本体是 SocialList。
+    private static bool IsPlayerListAddon(string? addonName) =>
+        addonName is "_PartyList" or "_AllianceList1" or "_AllianceList2"
+            or "PartyMemberList" or "SocialList" or "ContactList" or "FriendList"
+            or "ContentMemberList";
+
+    // 玩家列表右键菜单：加一个「oopz成员绑定」子菜单。
     // 写法参考 DailyRoutines 的 PetSizeContextMenu：外层项 IsSubmenu = true，
     // 点击时用 args.OpenSubmenu(...) 展开真正的成员列表。
     private void OnContextMenuOpened(IMenuOpenedArgs args) {
-        // 只在右键小队列表时出现
-        if (args.AddonName != "_PartyList") {
+        if (!IsPlayerListAddon(args.AddonName)) {
             return;
         }
 
@@ -347,10 +354,18 @@ public sealed class Plugin: IDalamudPlugin {
         this.ConfigWindow.SyncAssignmentsFromConfig();
     }
 
-    // 从右键目标里取角色名：优先角色对象，其次目标名。
+    // 从右键目标里取角色名：优先角色对象，其次同区域的目标对象，最后目标名。
     // 跨服成员可能带 "@服务器" 后缀，而绑定表里只存角色名，所以去掉。
     private static string? GetContextMenuTargetName(MenuTargetDefault target) {
-        var name = target.TargetCharacter?.Name ?? target.TargetName;
+        var name = target.TargetCharacter?.Name;
+        if (string.IsNullOrWhiteSpace(name)) {
+            name = target.TargetObject?.Name?.TextValue;
+        }
+
+        if (string.IsNullOrWhiteSpace(name)) {
+            name = target.TargetName;
+        }
+
         if (string.IsNullOrWhiteSpace(name)) {
             return null;
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
     <PropertyGroup>
-        <Version>0.2.6.0</Version>
+        <Version>0.2.7.0</Version>
         <Description>在 FF14 小队列表上直接显示 oopz 语音房间里谁在说话，改编自 WhosTalking。</Description>
         <PackageProjectUrl>https://codeberg.org/keysmashes/WhosTalking</PackageProjectUrl>
         <AssemblyName>OopzTalking</AssemblyName>
