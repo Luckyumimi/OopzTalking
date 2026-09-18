@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
@@ -47,7 +49,8 @@ public sealed class Plugin: IDalamudPlugin {
         INotificationManager notificationManager,
         ITextureProvider textureProvider,
         IAddonLifecycle addonLifecycle,
-        IChatGui chatGui
+        IChatGui chatGui,
+        IContextMenu contextMenu
     ) {
         this.PluginInterface = pluginInterface;
         this.GameGui = gameGui;
@@ -61,6 +64,7 @@ public sealed class Plugin: IDalamudPlugin {
         this.TextureProvider = textureProvider;
         this.AddonLifecycle = addonLifecycle;
         this.ChatGui = chatGui;
+        this.ContextMenu = contextMenu;
 
         this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         this.Configuration.Initialize(this.PluginInterface);
@@ -104,6 +108,10 @@ public sealed class Plugin: IDalamudPlugin {
         );
         this.disposeActions.Push(() => this.AddonLifecycle.UnregisterListener(this.AtkDrawAllianceList));
 
+        // 小队列表右键菜单：oopz 成员绑定
+        this.ContextMenu.OnMenuOpened += this.OnContextMenuOpened;
+        this.disposeActions.Push(() => this.ContextMenu.OnMenuOpened -= this.OnContextMenuOpened);
+
         // Voice list activity images
         var imagesPath = Path.Combine(this.PluginInterface.AssemblyLocation.Directory?.FullName!, "images");
         this.muteIcon = this.TextureProvider.GetFromFile(Path.Combine(imagesPath, "mute.png"));
@@ -137,6 +145,7 @@ public sealed class Plugin: IDalamudPlugin {
     internal ITextureProvider TextureProvider { get; init; }
     internal IAddonLifecycle AddonLifecycle { get; init; }
     internal IChatGui ChatGui { get; init; }
+    internal IContextMenu ContextMenu { get; init; }
 
     public void Dispose() {
         foreach (var action in this.disposeActions) {
@@ -235,6 +244,123 @@ public sealed class Plugin: IDalamudPlugin {
         Add(this.PlayerState.CharacterName);
 
         return names;
+    }
+
+    // 当前 oopz 语音房间里的成员名（显示名优先），右键菜单和设置界面共用。
+    public List<string> GetOopzMemberNames() {
+        var names = new List<string>();
+        foreach (var user in this.Connection.AllUsers.Values) {
+            var displayName = user.DisplayName.IsNullOrEmpty() ? user.Username : user.DisplayName;
+            if (!displayName.IsNullOrEmpty() && !names.Contains(displayName)) {
+                names.Add(displayName);
+            }
+        }
+
+        return names;
+    }
+
+    // 小队列表右键菜单：加一个「oopz成员绑定」子菜单。
+    // 写法参考 DailyRoutines 的 PetSizeContextMenu：外层项 IsSubmenu = true，
+    // 点击时用 args.OpenSubmenu(...) 展开真正的成员列表。
+    private void OnContextMenuOpened(IMenuOpenedArgs args) {
+        // 只在右键小队列表时出现
+        if (args.AddonName != "_PartyList") {
+            return;
+        }
+
+        if (args.Target is not MenuTargetDefault target) {
+            return;
+        }
+
+        var characterName = GetContextMenuTargetName(target);
+        if (string.IsNullOrEmpty(characterName)) {
+            return;
+        }
+
+        args.AddMenuItem(
+            new MenuItem {
+                Name = "oopz成员绑定",
+                IsSubmenu = true,
+                UseDefaultPrefix = false,
+                OnClicked = clickedArgs => clickedArgs.OpenSubmenu(
+                    "oopz成员绑定",
+                    this.BuildOopzBindingMenuItems(characterName)
+                ),
+            }
+        );
+    }
+
+    // 子菜单内容：当前语音房间的成员列表；没进语音频道就给一句提示。
+    private List<MenuItem> BuildOopzBindingMenuItems(string characterName) {
+        var items = new List<MenuItem>();
+
+        var members = this.GetOopzMemberNames();
+        if (members.Count == 0) {
+            items.Add(
+                new MenuItem {
+                    Name = "你还没有进入语音频道哦",
+                    IsEnabled = false,
+                    UseDefaultPrefix = false,
+                }
+            );
+
+            return items;
+        }
+
+        foreach (var member in members) {
+            var bound = this.Configuration.IndividualAssignments.Any(
+                entry => entry.CharacterName == characterName && entry.OopzName == member
+            );
+
+            items.Add(
+                new MenuItem {
+                    Name = bound ? $"✓ {member}（已绑定，点击取消）" : member,
+                    UseDefaultPrefix = false,
+                    OnClicked = _ => this.ToggleOopzBinding(characterName, member),
+                }
+            );
+        }
+
+        return items;
+    }
+
+    // 点某个 oopz 成员：没绑过就绑上，绑过就取消。
+    // 同一个角色可以绑多个成员，同一个成员也能被多个角色绑定。
+    public void ToggleOopzBinding(string characterName, string oopzName) {
+        var assignments = this.Configuration.IndividualAssignments;
+        var existing = assignments.FirstOrDefault(
+            entry => entry.CharacterName == characterName && entry.OopzName == oopzName
+        );
+
+        if (existing != null) {
+            assignments.Remove(existing);
+            this.ChatGui.Print($"已取消绑定：{characterName} ✕ {oopzName}", "Oopz Talking");
+        } else {
+            assignments.Add(new AssignmentEntry { CharacterName = characterName, OopzName = oopzName });
+            this.ChatGui.Print($"已绑定：{characterName} → {oopzName}", "Oopz Talking");
+        }
+
+        this.Configuration.Save();
+
+        // 设置窗口里存着一份列表副本，外部改了绑定要让它重新读一遍，
+        // 否则之后在窗口里改任何一行都会用旧副本覆盖掉这里的改动。
+        this.ConfigWindow.SyncAssignmentsFromConfig();
+    }
+
+    // 从右键目标里取角色名：优先角色对象，其次目标名。
+    // 跨服成员可能带 "@服务器" 后缀，而绑定表里只存角色名，所以去掉。
+    private static string? GetContextMenuTargetName(MenuTargetDefault target) {
+        var name = target.TargetCharacter?.Name ?? target.TargetName;
+        if (string.IsNullOrWhiteSpace(name)) {
+            return null;
+        }
+
+        var atIndex = name.IndexOf('@');
+        if (atIndex > 0) {
+            name = name[..atIndex];
+        }
+
+        return name.Trim();
     }
 
     private uint GetColour(User? user) {

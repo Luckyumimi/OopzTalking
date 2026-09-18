@@ -33,6 +33,7 @@ https://raw.githubusercontent.com/Luckyumimi/MyDalamudPlugins/master/pluginmaste
 - `/oopz` —— 开关设置窗口
 - `/oopz port 10274` —— 改 oopz 端口（默认已 10274）
 - oopz 昵称包含角色名（第一个或最后一个字）即自动匹配；重名/花名可在设置「高级手动绑定」手动绑定
+- **右键小队列表里的队友 → 「oopz成员绑定」子菜单**：直接点 oopz 成员名即可绑定（再点一次取消）。同一成员可绑多个角色，同一角色也可绑多个成员；没进语音频道时子菜单里会提示「你还没有进入语音频道哦」
 
 ## 编译
 

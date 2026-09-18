@@ -344,13 +344,7 @@ public sealed class ConfigWindow: Window, IDisposable {
                 var partyNames = this.plugin.GetPartyMemberNames();
 
                 // 2) oopz 房间成员名（显示名优先）作为 oopz 候选
-                var oopzMemberNames = new List<string>();
-                foreach (var user in this.plugin.Connection.AllUsers.Values) {
-                    var displayName = user.DisplayName.IsNullOrEmpty() ? user.Username : user.DisplayName;
-                    if (!displayName.IsNullOrEmpty() && !oopzMemberNames.Contains(displayName)) {
-                        oopzMemberNames.Add(displayName);
-                    }
-                }
+                var oopzMemberNames = this.plugin.GetOopzMemberNames();
 
                 var removedIndices = new List<int>();
                 for (var i = 0; i < this.individualAssignments.Count; i++) {
@@ -529,6 +523,12 @@ public sealed class ConfigWindow: Window, IDisposable {
         ImGui.Text("");
 
         return r;
+    }
+
+    // 外部（小队列表右键菜单）改了绑定后调用，让窗口里的列表副本重新读一遍配置，
+    // 避免之后在窗口里改一行就用旧副本把新绑定覆盖掉。
+    public void SyncAssignmentsFromConfig() {
+        this.ResetListToConfig();
     }
 
     private void ResetListToConfig() {
